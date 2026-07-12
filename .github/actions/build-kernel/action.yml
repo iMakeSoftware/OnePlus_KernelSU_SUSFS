@@ -1848,7 +1848,9 @@ runs:
         echo "============================================"
         
         ccache --set-config=extra_files_to_hash=""
+        CONFIG_FILE="$CCACHE_DIR/ccache.conf"
         GZ_FILE="$COMMON_KERNEL_FOLDER/$OUT/kernel/config_data.gz"
+        DATA_FILE="$COMMON_KERNEL_FOLDER/$OUT/kernel/config_data"
 
         (
           TRACKED_LIST=""
@@ -1860,12 +1862,20 @@ runs:
             
             if [ "$NEW_LIST" != "$TRACKED_LIST" ]; then
               TRACKED_LIST="$NEW_LIST"
-              if [ -n "$TRACKED_LIST" ]; then
-                ccache --set-config=extra_files_to_hash="$TRACKED_LIST"
+              
+              if [ -f "$CONFIG_FILE" ]; then
+                grep -v "extra_files_to_hash" "$CONFIG_FILE" > /tmp/ccache.conf.tmp
               else
-                ccache --clear-config=extra_files_to_hash
+                > /tmp/ccache.conf.tmp
               fi
-              echo "[ccache extra_files_to_hash tracking] -> $TRACKED_LIST"
+
+              if [ -n "$TRACKED_LIST" ]; then
+                echo "extra_files_to_hash = $TRACKED_LIST" >> /tmp/ccache.conf.tmp
+              fi
+
+              mv /tmp/ccache.conf.tmp "$CONFIG_FILE"
+              
+              echo "[ccache extra_files_to_hash tracking] -> ${TRACKED_LIST:-EMPTY}"
             fi
             
             sleep 0.5
