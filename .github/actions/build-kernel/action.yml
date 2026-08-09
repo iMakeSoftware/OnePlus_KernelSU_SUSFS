@@ -379,6 +379,18 @@ runs:
         DEBUG_ZIP_NAME="debug_${OP_MODEL}_${OP_OS_VERSION}.zip"
         echo "DEBUG_ZIP_NAME=$DEBUG_ZIP_NAME" >> "$GITHUB_ENV"
 
+    - name: Map SM8850 for ACE-6T
+      shell: bash 
+      run: | 
+        if [[ "$OP_MODEL" == "OP-ACE-6T" ]]; then
+          cd "$KERNEL_PLATFORM_FOLDER/vendor/qcom/opensource/display-drivers/"
+          if [ -d "oplus/SM8850" ] && [ ! -d "msm/SM8850" ]; then
+            cd msm
+            ln -s ../oplus/SM8850 SM8850
+            echo "Successfully exposed oplus/SM8850 target folder"
+          fi
+        fi
+
     - name: Set Kernel build-tools to Path
       shell: bash
       run: |
