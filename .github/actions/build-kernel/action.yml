@@ -1,6 +1,11 @@
 name: 'Build OnePlus Kernel with KernelSU Next'
 
 inputs:
+  gitlab_pat:
+    description: 'Gitlab PAT'
+    required: false
+    type: string
+    default: ""
   op_config_json:
     description: 'JSON string containing full device config'
     required: true
@@ -733,8 +738,6 @@ runs:
         echo "::endgroup::"
 
     - name: Fetch SusFS and Other Dependencies
-      env:
-          GITLAB_PAT: ${{ secrets.GITLAB_PAT }}
       shell: bash
       run: |
         echo "::group::Fetch dependencies"
@@ -797,7 +800,8 @@ runs:
               download_url="${url%.git}/archive/refs/heads/${branch}.tar.gz"
           elif [[ "$url" == *"gitlab.com"* ]]; then
               download_url="${url%.git}/-/archive/${branch}/${repo_name}-${branch}.tar.gz"
-              aria2_headers+=("--header=Private-Token: ${GITLAB_PAT}")
+              local GITLAB_PAT="${{ inputs.gitlab_pat }}"
+              aria2_headers+=("--header=Private-Token: $GITLAB_PAT")
           else
               echo "::error::Unsupported host: $url"
               return 1
