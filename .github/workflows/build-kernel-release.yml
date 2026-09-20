@@ -7,6 +7,11 @@ permissions:
 on:
   workflow_dispatch:
     inputs:
+      gitlab_pat:
+        description: 'Gitlab PAT'
+        required: false
+        type: string
+        default: ''
       make_release:
         description: 'Do you want to create a release?'
         required: true
@@ -28,7 +33,8 @@ on:
           - android14-6.1
           - android13-5.15
           - android12-5.10
-        default: A14+15+16
+          - OP-ACE-6T
+        default: android16-6.12
       ksu_options:
         description: 'Enter KernelSU build json'
         required: true
