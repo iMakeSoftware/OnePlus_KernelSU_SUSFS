@@ -7,11 +7,6 @@ permissions:
 on:
   workflow_dispatch:
     inputs:
-      gitlab_pat:
-        description: 'Gitlab PAT'
-        required: false
-        type: string
-        default: ''
       make_release:
         description: 'Do you want to create a release?'
         required: true
