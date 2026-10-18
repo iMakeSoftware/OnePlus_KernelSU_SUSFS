@@ -1,4 +1,6 @@
 name: 'Build OnePlus Kernel with KernelSU Next'
+
+inputs:
   op_config_json:
     description: 'JSON string containing full device config'
     required: true
@@ -776,6 +778,11 @@ runs:
           local shm_path="/dev/shm/$archive_name"
           
           local nproc=$(nproc 2>/dev/null || echo 4)
+          
+          local aria_log_flags="--quiet --summary-interval=0"
+          if [ "${{ inputs.debug }}" = "true" ]; then
+              aria_log_flags="--summary-interval=5" # Show progress every 5s in debug
+          fi
           
           local user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
           local aria2_args=(
@@ -1907,7 +1914,6 @@ runs:
         export PAHOLE="$KERNEL_PLATFORM_FOLDER/prebuilts/kernel-build-tools/linux-x86/bin/pahole"
         export LD=ld.lld HOSTLD=ld.lld AR=llvm-ar NM=llvm-nm 
         export OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip
-        export KBUILD_GENDWARFKSYMS_STABLE=1
         
         set +u
         source "$KERNEL_PLATFORM_FOLDER/build/kernel/_setup_env.sh" 2>/dev/null || true
