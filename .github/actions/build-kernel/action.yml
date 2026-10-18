@@ -14,17 +14,17 @@ name: 'Build OnePlus Kernel with KernelSU Next'
     description: 'KSU branch or commit hash (empty = auto-detect by ksu_type)'
     required: false
     type: string
-    default: ""
+    default: "9124eb15ea6691b818fb12ee28fc96fc4926afb3"
   susfs_commit_hash_or_branch:
     description: 'SUSFS branch or commit hash (empty = auto-detect by kernel version)'
     required: false
     type: string
-    default: ""
+    default: "acb92d4abc922cac384a207744b2db40281a7c7f"
   build_timestamp:
     description: 'Custom kernel build timestamp shown in uname -a (e.g. "Tue Feb 10 10:01:02 UTC 2026"). Leave empty to use the current build time.'
     required: false
     type: string
-    default: ''
+    default: 'Fri Dec 5 02:15:49 UTC 2025'
   optimize_level:
     description: 'Compiler optimization level (O2 or O3)'
     required: false
