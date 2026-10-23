@@ -682,7 +682,7 @@ jobs:
 
       - name: 🔨 Build Kernel
         id: build
-        uses: ./.github/actions/build-kernel
+        uses: ./.github/actions/build-kernel-BAKASU
         with:
           op_config_json: ${{ steps.prepare_config.outputs.config_json }}
           ksu_type: ${{ matrix.ksu_type }}
