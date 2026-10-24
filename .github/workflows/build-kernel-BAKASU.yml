@@ -76,6 +76,7 @@ jobs:
       ksu_resolved_hash:    ${{ steps.set-matrix.outputs.ksu_resolved_hash }}
       ksu_options_normalized: ${{ steps.set-matrix.outputs.ksu_options_normalized }}
       susfs_base_version: ${{ steps.set-matrix.outputs.susfs_base_version }}
+      resolved_ts: ${{ steps.resolve-timestamp.outputs.resolved_ts }}
     env:
       GH_TOKEN: ${{ github.token }}
       GH_HTTP_TIMEOUT: 600
@@ -391,11 +392,17 @@ jobs:
           echo "::endgroup::"
           
       - name: Resolve Timestamp
+        shell: bash
+        id: resolve-timestamp
         run: |
-          # Read the choice selection
-          TIMESTAMP="${{ inputs.build_timestamp }}"
+          set -euo pipefail
           
-          if [ "$TIMESTAMP" = "Custom (Use text field below)" ] || [ "$TIMESTAMP" = "Current" ]; then
+          timestamp="${{ inputs.build_timestamp }}"
+          if [ "$timestamp" = "Current" ]; then
+            resolved_ts=$(date -u +"%a %b %d %H:%M:%S UTC %Y"
+          fi
+          
+          if [ "$timestamp" = "Custom (Use text field below)" ]; then
             # If the user left the custom field blank, generate the current system time
             if [ -z "${{ inputs.custom_timestamp }}" ]; then
               resolved_ts=$(date -u +"%a %b %d %H:%M:%S UTC %Y")
@@ -403,11 +410,10 @@ jobs:
               resolved_ts="${{ inputs.custom_timestamp }}"
             fi
           else
-            resolved_ts="$TIMESTAMP"
+            resolved_ts="$timestamp"
           fi
           
-          # Save it as an environment variable for subsequent steps
-          echo "resolved_ts=$resolved_ts" >> $GITHUB_ENV
+          echo "resolved_ts=$timestamp" >> $GITHUB_OUTPUT
 
       - name: Upload build matrix
         uses: actions/upload-artifact@v7
@@ -432,7 +438,7 @@ jobs:
           fi
 
           
-          build_ts_input="${{ github.env.resolved_ts }}"
+          build_ts_input="${{ steps.resolve-timestamp.outputs.resolved_ts }}"
           if [ -z "$build_ts_input" ]; then
             build_ts_display="⏱️ auto (default)"
           else
@@ -665,7 +671,7 @@ jobs:
           ksu_branch_or_hash: ${{ matrix.ksu_resolved_hash }}
           susfs_commit_hash_or_branch: ${{ matrix.susfs_resolved_hash }}
           optimize_level: ${{ inputs.optimize_level }}
-          build_timestamp: ${{ github.env.resolved_ts }}
+          build_timestamp: ${{ needs.set-op-model.outputs.resolved_ts }}
           clean: ${{ inputs.clean_build }}
           debug: ${{ inputs.debug }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
