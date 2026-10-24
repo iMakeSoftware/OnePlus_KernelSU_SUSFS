@@ -398,11 +398,8 @@ jobs:
           set -euo pipefail
           
           timestamp="${{ inputs.build_timestamp }}"
-          if [ "$timestamp" = "Current" ]; then
-            resolved_ts=$(date -u +"%a %b %d %H:%M:%S UTC %Y"
-          fi
           
-          if [ "$timestamp" = "Custom (Use text field below)" ]; then
+          if [ "$timestamp" = "Custom (Use text field below)" ] || [ "$timestamp" = "Current" ]; then
             # If the user left the custom field blank, generate the current system time
             if [ -z "${{ inputs.custom_timestamp }}" ]; then
               resolved_ts=$(date -u +"%a %b %d %H:%M:%S UTC %Y")
