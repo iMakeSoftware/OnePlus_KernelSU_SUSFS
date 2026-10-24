@@ -834,7 +834,7 @@ jobs:
           # Only search for tags starting with this SUSFS version
           PIN=$(grep -o '"hash":"[0-9a-f]\{40\}"' .github/workflows/build-kernel-BAKASU.yml | head -1 | cut -d'"' -f4)
           SHORT=${PIN:0:7}
-          LATEST_MATCHING_TAG=$(gh api repos/iMakeSoftware/OnePlus_KernelSU_SUSFS/tags --paginate --jq "[.[] | select(.name | startswith(\"BakaSU-1bfed00-SUSFS-v2.3.0-r\"))] \
+          LATEST_MATCHING_TAG=$(gh api repos/iMakeSoftware/OnePlus_KernelSU_SUSFS/tags --paginate --jq "[.[] | select(.name | startswith(\"BakaSU-${SHORT}-SUSFS-${SUSFS_BASE_VERSION}-r\"))] \
           | sort_by(.name | split(\"-r\")[-1] | tonumber) \
           | last | .name // empty")
           
