@@ -844,8 +844,8 @@ jobs:
             # No existing release for this version SUSFS → first release
             NEW_TAG="BakaSU-${SHORT}-SUSFS-${SUSFS_BASE_VERSION}-r1"
           else
-            PREFIX="${LATEST_MATCHING_TAG%-r*}"
-            REVISION="${LATEST_MATCHING_TAG##*-r}"
+            PREFIX="${BakaSU-${SHORT}-SUSFS-${SUSFS_BASE_VERSION}"
+            REVISION="$LATEST_MATCHING_TAG: -1"
             NEW_TAG="${PREFIX}-r$((REVISION + 1))"
           fi
           
