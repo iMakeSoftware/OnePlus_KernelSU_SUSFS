@@ -395,7 +395,7 @@ jobs:
           # Read the choice selection
           TIMESTAMP="${{ inputs.build_timestamp }}"
           
-          if [ "$TIMESTAMP" = "Custom (Use text field below)" or "$TIMESTAMP" = "Current"]; then
+          if [ "$TIMESTAMP" = "Custom (Use text field below)" ] || [ "$TIMESTAMP" = "Current" ]; then
             # If the user left the custom field blank, generate the current system time
             if [ -z "${{ inputs.custom_timestamp }}" ]; then
               resolved_ts=$(date -u +"%a %b %d %H:%M:%S UTC %Y")
@@ -403,7 +403,7 @@ jobs:
               resolved_ts="${{ inputs.custom_timestamp }}"
             fi
           else
-            resolved_ts="$SELECTED_TIME"
+            resolved_ts="$TIMESTAMP"
           fi
           
           # Save it as an environment variable for subsequent steps
