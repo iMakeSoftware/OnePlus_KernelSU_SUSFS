@@ -2,7 +2,7 @@
 
 # 🔥 Wild Kernels for OnePlus (Oppo/Realme)
 
-[![KernelSU-Next](https://img.shields.io/badge/KernelSU_Next-Supported-green)](https://kernelsu-next.github.io/webpage/)
+[![BakaSU](https://img.shields.io/badge/BakaSU-Supported-green)](https://bakasu.org/)
 [![KernelSU](https://img.shields.io/badge/KernelSU-Supported-green)](https://kernelsu.org/)
 [![Wild KSU](https://img.shields.io/badge/Wild_KSU-Not%20Supported-cb2431)](https://github.com/WildKernels/Wild_KSU/)
 [![SUSFS](https://img.shields.io/badge/SUSFS-Integrated-orange?logo=gitlab)](https://gitlab.com/simonpunk/susfs4ksu)
@@ -106,7 +106,7 @@ You can also find Installation instructions in the release notes.
 | 🔧 **Project** | 👨‍💻 **Developer** | 🔗 **Link** |
 |:---------------:|:----------------:|:-----------:|
 | **KernelSU** | tiann | [![GitHub](https://img.shields.io/badge/GitHub-tiann-blue?style=flat-square&logo=github)](https://github.com/tiann/KernelSU) |
-| **KernelSU-Next** | rifsxd | [![GitHub](https://img.shields.io/badge/GitHub-rifsxd-blue?style=flat-square&logo=github)](https://github.com/KernelSU-Next/KernelSU-Next) |
+| **BakaSU** | Baka-SU | [![GitHub](https://img.shields.io/badge/GitHub-Baka-SU-blue?style=flat-square&logo=github)](https://github.com/Baka-SU/BakaSU) |
 | **Magic-KSU** | 5ec1cff | [![GitHub](https://img.shields.io/badge/GitHub-5ec1cff-blue?style=flat-square&logo=github)](https://github.com/5ec1cff/KernelSU) |
 | **SUSFS** | simonpunk | [![GitLab](https://img.shields.io/badge/GitLab-simonpunk-orange?style=flat-square&logo=gitlab)](https://gitlab.com/simonpunk/susfs4ksu.git) |
 | **SUSFS Module** | sidex15 | [![GitHub](https://img.shields.io/badge/GitHub-sidex15-blue?style=flat-square&logo=github)](https://github.com/sidex15) |
