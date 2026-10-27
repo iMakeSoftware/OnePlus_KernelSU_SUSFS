@@ -877,14 +877,14 @@ runs:
         sed -i 's/protected_modules = \[.*\]/protected_modules = []/' common/modules.bzl || true
         echo "::endgroup::"
 
-    - name: Add ReSukiSU
+    - name: Add BakaSU
       shell: bash
       if: ${{ inputs.ksu_type == 'BAKASU' }}
       run: |
         set -euo pipefail
-        echo "::group::Add ReSukiSU"
+        echo "::group::Add BakaSU"
         cd "$KERNEL_PLATFORM_FOLDER"
-        echo "Adding ReSukiSU..."
+        echo "Adding BakaSU..."
         KSU_INPUT="${{ inputs.ksu_branch_or_hash }}"
         if [ -z "$KSU_INPUT" ]; then
           curl --fail --location --proto '=https' -LSs "https://raw.githubusercontent.com/Baka-SU/BakaSU/main/kernel/setup.sh" | bash -
@@ -904,6 +904,9 @@ runs:
         
         KSU_VERSION=$(expr $COMMITS_COUNT "+" $BASE_VERSION)
         sed -i "s/DKSU_VERSION=11998/DKSU_VERSION=${KSU_VERSION}/" Makefile
+
+        BAKASU_VERION_OFFSET=700
+        BAKASU_VERSION=$(expr $KSU_VERSION "+" $BAKASU_VERSION_OFFSET)
         
         if [ -f ksu.c ]; then
           sed -i 's/#if defined(CONFIG_STACKPROTECTOR) && (defined(CONFIG_ARM64) && !defined(CONFIG_STACKPROTECTOR_PER_TASK))/#if 0/' ksu.c
@@ -933,10 +936,10 @@ runs:
         EOF
         
         echo "BAKASU" >> "${ARTIFACTS_FOLDER}/${OP_MODEL}_${OP_OS_VERSION}.txt"
-        echo "$KSU_VERSION" >> "${ARTIFACTS_FOLDER}/${OP_MODEL}_${OP_OS_VERSION}.txt"
-        echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
-        echo "ReSukiSU Version: $KSU_VERSION"
-        echo "✅ ReSukiSU added (commit: ${KSU_COMMIT_SHA:0:8})"
+        echo "$BAKASU_VERSION" >> "${ARTIFACTS_FOLDER}/${OP_MODEL}_${OP_OS_VERSION}.txt"
+        echo "KSUVER=$BAKASU_VERSION" >> $GITHUB_ENV
+        echo "BakaSU Version: $BAKASU_VERSION"
+        echo "✅ BakaSU added (commit: ${KSU_COMMIT_SHA:0:8})"
         echo "::endgroup::"
 
     - name: Add KernelSU
@@ -1109,7 +1112,7 @@ runs:
             fi
             ;;
           "v2.3.0")
-            echo "ReSukiSU ships its own SUSFS Kconfig - skipping the KernelSU patch"
+            echo "BakaSU ships its own SUSFS Kconfig - skipping the KernelSU patch"
             ;;
           *)
             echo "::error::Unsupported SUSFS version: $susfs_version"
@@ -2387,7 +2390,7 @@ runs:
           
           if [ "$KSU_SHA" != "unknown" ]; then
             if [ "${{ inputs.ksu_type }}" = "BAKASU" ]; then
-              echo "| **BAKASU Commit** | [\`${KSU_SHA:0:8}\`](https://github.com/KernelSU/KernelSU/commit/$KSU_SHA) |"
+              echo "| **BAKASU Commit** | [\`${KSU_SHA:0:8}\`](https://github.com/Baka-SU/BakaSU/commit/$KSU_SHA) |"
             else
               echo "| **KSU Commit** | [\`${KSU_SHA:0:8}\`](https://github.com/tiann/KernelSU/commit/$KSU_SHA) |"
             fi
