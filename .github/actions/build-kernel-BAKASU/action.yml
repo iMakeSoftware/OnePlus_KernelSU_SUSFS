@@ -899,14 +899,11 @@ runs:
         if [ $COMMITS_COUNT -lt 2684 ]; then
           BASE_VERSION=10200
         else
-          BASE_VERSION=30000
+          BASE_VERSION=30700
         fi
         
         KSU_VERSION=$(expr $COMMITS_COUNT "+" $BASE_VERSION)
         sed -i "s/DKSU_VERSION=11998/DKSU_VERSION=${KSU_VERSION}/" Makefile
-
-        BAKASU_VERION_OFFSET=700
-        BAKASU_VERSION=$(expr $KSU_VERSION "+" $BAKASU_VERSION_OFFSET)
         
         if [ -f ksu.c ]; then
           sed -i 's/#if defined(CONFIG_STACKPROTECTOR) && (defined(CONFIG_ARM64) && !defined(CONFIG_STACKPROTECTOR_PER_TASK))/#if 0/' ksu.c
@@ -935,10 +932,10 @@ runs:
         CONFIG_KSU_KPROBES_HOOK=n
         EOF
         
-        echo "BAKASU" >> "${ARTIFACTS_FOLDER}/${OP_MODEL}_${OP_OS_VERSION}.txt"
-        echo "$BAKASU_VERSION" >> "${ARTIFACTS_FOLDER}/${OP_MODEL}_${OP_OS_VERSION}.txt"
-        echo "KSUVER=$BAKASU_VERSION" >> $GITHUB_ENV
-        echo "BakaSU Version: $BAKASU_VERSION"
+        echo "BakaSU" >> "${ARTIFACTS_FOLDER}/${OP_MODEL}_${OP_OS_VERSION}.txt"
+        echo "$KSU_VERSION" >> "${ARTIFACTS_FOLDER}/${OP_MODEL}_${OP_OS_VERSION}.txt"
+        echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
+        echo "BakaSU Version: $KSU_VERSION"
         echo "✅ BakaSU added (commit: ${KSU_COMMIT_SHA:0:8})"
         echo "::endgroup::"
 
