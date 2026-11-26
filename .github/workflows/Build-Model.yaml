@@ -902,7 +902,7 @@ jobs:
           ksu-type: ksun
           dist-dir: ./downloaded-artifacts
           commit-hash: ${{ needs.set-op-model.outputs.ksu_resolved_hash }}
-          github-token: ${{ inputs.github_token }}
+          github-token: ${{ env.GH_TOKEN }}
 
       - name: Download KSU Manager
         uses: nullptr-t-oss/composite_actions/fetch_ksu_manager@main
@@ -911,7 +911,7 @@ jobs:
           ksu-type: ksu
           dist-dir: ./downloaded-artifacts
           commit-hash: ${{ needs.set-op-model.outputs.ksu_resolved_hash }}
-          github-token: ${{ inputs.github_token }}
+          github-token: ${{ env.GH_TOKEN }}
 
       - name: 📝 Generate Device List and Final Release Notes
         id: generate-notes
