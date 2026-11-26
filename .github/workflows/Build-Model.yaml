@@ -113,16 +113,16 @@ jobs:
         run: |
           set -euo pipefail
           echo "::group::Matrix generation"
-
+          
           input="${{ github.event.inputs.op_model }}"
           ksu_options_raw='${{ github.event.inputs.ksu_options }}'
           if ! ksu_options_normalized=$(echo "$ksu_options_raw" | jq -c 'map(if .type then .type |= ascii_upcase | if .hash == null then if .type == "KSUN" then .hash = "dev" elif .type == "KSU" then .hash = "main" else .hash end else . end else error("No type found") end)' 2>&1); then
             echo "::error::ksu_options validation failed: $ksu_options_normalized"
             exit 1
           fi
-
+          
           echo "ksu_options_normalized=$ksu_options_normalized" >> $GITHUB_OUTPUT
-
+          
           echo "[" > matrix.json
           mapfile -t all_json_files < <(find configs/ -name "*.json" -print0 | xargs -0 -n1)
           for i in "${!all_json_files[@]}"; do
@@ -162,10 +162,10 @@ jobs:
             android*-*.*)
               # Extract android version and kernel version
               IFS='-' read -r av kv <<< "$input"
-
+              
               # Build android*-* only for A15 and A16
               jq_filter="map(select(.os_version == \"A15\" or .os_version == \"A16\")) | map(select(.android_version == \"$av\" and .kernel_version == \"$kv\"))"
-
+              
               echo "ℹ️  Android-Kernel filter applied: $av-$kv"
               echo "   Restricted to: A15 and A16 only"
               ;;
@@ -174,7 +174,7 @@ jobs:
               jq_filter="map(select(false))"
               ;;
           esac
-
+          
           filtered=$(jq -c "$jq_filter" matrix.json)
           count=$(jq 'length' <<<"$filtered")
           
@@ -549,7 +549,7 @@ jobs:
 
   prepare_ccache:
     name: Prepare ccache binary (download once)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       # Download the custom ccache binary ONCE for the whole matrix and share it as
       # an artifact. Previously every parallel matrix job curl'd the same GitHub raw
@@ -591,7 +591,7 @@ jobs:
       !cancelled() &&
       needs.set-op-model.result == 'success' &&
       (needs.mirror_toolchain.result == 'success' || needs.mirror_toolchain.result == 'skipped')
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.set-op-model.outputs.matrix) }}
@@ -849,7 +849,7 @@ jobs:
 
   trigger-release:
     needs: [set-op-model, build]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     if: |
       !cancelled() &&
       inputs.make_release == true &&
@@ -858,7 +858,7 @@ jobs:
     env:
       REPO_OWNER: ${{ github.repository_owner }}
       REPO_NAME: ${{ github.event.repository.name }}
-      GH_TOKEN: ${{ github.token }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       SUSFS_BASE_VERSION: ${{ needs.set-op-model.outputs.susfs_base_version }}
       RELEASE_NAME: '*TEST BUILD* OnePlus Kernels With KernelSU Next & SUSFS ${{ needs.set-op-model.outputs.susfs_base_version }} *TEST BUILD*'
     steps:
@@ -874,7 +874,7 @@ jobs:
             --jq "[.[] | select(.name | startswith(\"${SUSFS_BASE_VERSION}-r\"))] \
                   | sort_by(.name | split(\"-r\")[1] | tonumber) \
                   | last | .name // empty")
-
+          
           if [ -z "$LATEST_MATCHING_TAG" ]; then
             # No existing release for this version SUSFS → first release
             NEW_TAG="${SUSFS_BASE_VERSION}-r1"
@@ -882,7 +882,7 @@ jobs:
             # Only increment the -r* suffix of the latest release for this version
             NEW_TAG=$(echo "$LATEST_MATCHING_TAG" | awk -F'-r' '{printf "%s-r%d", $1, $2+1}')
           fi
-
+          
           echo "New tag: $NEW_TAG"
           echo "NEW_TAG=${NEW_TAG}" >> $GITHUB_ENV
           git tag $NEW_TAG
@@ -902,7 +902,7 @@ jobs:
           ksu-type: ksun
           dist-dir: ./downloaded-artifacts
           commit-hash: ${{ needs.set-op-model.outputs.ksu_resolved_hash }}
-          github-token: ${{ inputs.GH_TOKEN }}
+          github-token: ${{ inputs.github_token }}
 
       - name: Download KSU Manager
         uses: nullptr-t-oss/composite_actions/fetch_ksu_manager@main
@@ -911,21 +911,21 @@ jobs:
           ksu-type: ksu
           dist-dir: ./downloaded-artifacts
           commit-hash: ${{ needs.set-op-model.outputs.ksu_resolved_hash }}
-          github-token: ${{ inputs.GH_token }}
+          github-token: ${{ inputs.github_token }}
 
       - name: 📝 Generate Device List and Final Release Notes
         id: generate-notes
         run: |
           echo "=== Start building the release notes ==="
-
+          
           # Remove ccache-binary artifacts
           rm -f ./downloaded-artifacts/ccache-binary.zip
-
+          
           # Collect build metadata
           declare -A device_info
-
+          
           JSON_BUILD_DATA=$(jq -c '.' ./downloaded-artifacts/matrix.json)
-
+          
           for file in $(find downloaded-artifacts -maxdepth 1 -name "*.zip" -type f | sort); do
             if [ -f "$file" ]; then
               zipname=$(basename "$file" .zip)
@@ -945,15 +945,15 @@ jobs:
               device_info["$full_model"]="$model|$os_version|$kernel_version|$ksu_type|$ksu_ver|$susfs_ver|$zipname"
             fi
           done
-
+          
           ksu_type="${{ fromJSON(needs.set-op-model.outputs.ksu_options_normalized)[0].type }}"
           ksu_ref="${{ fromJSON(needs.set-op-model.outputs.ksu_options_normalized)[0].hash }}"
           ksu_resolved_hash="${{ needs.set-op-model.outputs.ksu_resolved_hash }}"
-
+          
           OPTIMIZE_LEVEL="${{ inputs.optimize_level }}"
           MLGO="${{ inputs.mlgo }}"
           CLEAN_BUILD="${{ inputs.clean_build }}"
-
+          
           # Hash map for GKI version
           declare -A susfs_map=(
             ["android12-5.10"]="${{ needs.set-op-model.outputs.susfs_hash_android12_5_10 }}"
@@ -962,17 +962,18 @@ jobs:
             ["android15-6.6"]="${{ needs.set-op-model.outputs.susfs_hash_android15_6_6 }}"
             ["android16-6.12"]="${{ needs.set-op-model.outputs.susfs_hash_android16_6_12 }}"
           )
-
+          
           # List of GKI versions present in this run
           IFS=',' read -ra active_gki_keys \
             <<< "${{ needs.set-op-model.outputs.active_gki_keys }}"
-
+          
           cat << EOF > release_notes.md
           # 🎯 OnePlus Kernels with KernelSU Next & SUSFS $SUSFS_BASE_VERSION
-
-          > **Build Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')
-          > **Build ID:** \`${{ github.run_id }}\`
+          
+          > **Build Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')  
+          > **Build ID:** \`${{ github.run_id }}\`  
           > **Workflow:** [\`${{ github.workflow }}\`](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          
           ---
           
           ## 📦 Built Devices (${#device_info[@]} total)
@@ -995,7 +996,7 @@ jobs:
             feature_flags=$(jq -r --arg MODEL "$model" --arg ORIG_MODEL "$possible_orig_model" --arg OS "$os_ver" '
               ([ .[] | select(.model == $ORIG_MODEL and .os_version == $OS) ][0]) //
               ([ .[] | select(.model == $MODEL      and .os_version == $OS) ][0]) |
-              "\(.hmbird // false)\t\(.susfs // false)\t\(.bbr // false)\t\(.bbr3 // false)\t\(.bbg // false)\t\(.ttl // false)\t\(.ip_set // false)\t\(.unicode // false)\t\(.ds // false)\t\(.ntsync // false)"
+              "\(.hmbird // false)\t\(.susfs // false)\t\(.bbr // false)\t\(.bbr3 // false)\t\(.bbg // false)\t\(.ttl // false)\t\(.ip_set // false)\t\(.unicode // false)\t\(.ds // false)\t\(.ntsync // false)\t\(.sdp900ma // false)"
             ' <<< "$JSON_BUILD_DATA")
             
             features=()
@@ -1004,7 +1005,7 @@ jobs:
               echo "Warning: No JSON entry found for model: $model" >&2
               features_str="N/A"
             else
-              IFS=$'\t' read -r hmbird susfs bbr bbr3 bbg ttl ip_set unicode ds ntsync <<< "$feature_flags"
+              IFS=$'\t' read -r hmbird susfs bbr bbr3 bbg ttl ip_set unicode ds ntsync sdp900ma <<< "$feature_flags"
               
               # Build features string based on boolean values
               [[ "$hmbird" == "true" ]] && features+=("🐦 HMBIRD")
@@ -1017,6 +1018,7 @@ jobs:
               [[ "$unicode" == "true" ]] && features+=("🔧 Unicode Fix")
               [[ "$ds" == "true" ]] && features+=("💻 Droidspaces")
               [[ "$ntsync" == "true" ]] && features+=("🔃 NTSync")
+              [[ "$sdp900ma" == "true" ]] && features+=("🔌 Faster SDP Charging")
               
               total=${#features[@]}
               if [ $total -eq 0 ]; then
@@ -1155,7 +1157,7 @@ jobs:
             - ✅ AVC_SPOOF - Spoof Procfs avc denial logs
           - **Ptrace Leak Fix** - For kernels < 5.16
           - **Unicode Fix** - Prevent path traversal and other detections using non-printable Unicode codepoints [Experimental]
-
+          
           ### 🚀 Performance & Networking
           - **BBRv1** - Improved TCP congestion control
           - **BBRv3** - Improved TCP congestion control
@@ -1164,15 +1166,17 @@ jobs:
           - **IP Set & IPv6 NAT Support** - Advanced firewall capabilities and IPv6 NAT Support
           - **TTL Target Support** - Network packet manipulation
           - **LTO (Link Time Optimization)** - Optimized binary size and performance
+          - **MGLO** - Machine Learning-Guided Optimization to generate better optimisated images
           - **ccache-accelerated builds** - Faster compilation times
           - **Optimisation Patches** - Memory, I/O, CPU scheduler, network and other general tunings
- 
+          
           ### 🔧 System Features
           - **TMPFS_XATTR** - Extended attributes for tmpfs (Mountify support)
           - **TMPFS_POSIX_ACL** - POSIX ACLs for tmpfs
           - **HMBIRD SCX** - Scheduler extensions for all SM8750/MT6991 devices
           - **Droidspaces** - Support Portable Linux containers to run full Linux environments.
           - **NTSync** - Provide high-performance, low-latency synchronization primitives compatible with the Windows NT kernel API
+          - **Faster SDP charging** - Allow 900mA instead of 500mA for (SDP) USB data ports. (Host data port must support 900ma[USB 3.0 ports])
           
           ---
           
@@ -1231,18 +1235,19 @@ jobs:
           
           ### This Release
           - Updated SUSFS to $SUSFS_BASE_VERSION.
-          - Added HMBIRD support for all SM8750/MT6991 devices.
+          - Added HMBIRD support for all SM8735/SM8750/MT6991 devices.
           - Improved ccache build system.
           - Enhanced SUSFS hiding capabilities.
           - Added IP_SET, IPv6 NAT and TTL support.
           - Added TMPFS_XATTR and TMPFS_POSIX_ACL support for Mountify.
           - Added Ptrace leak fix for kernels < 5.16.
-          - Compiler optimizations (${{ inputs.optimize_level }}).
+          - Compiler optimizations (${{ inputs.optimize_level }} & MGLO).
           - Additional General Optimisations.
           - Wild_KSU Manager Support.
           - Unicode Bypass Fix
           - Droidspaces Support
           - NTSync Support
+          - Allow 900mA instead of 500mA for (SDP) USB data ports.
           
           ### Previous Releases
           See [Releases Page](${{ github.server_url }}/${{ github.repository }}/releases)
